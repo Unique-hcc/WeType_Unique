@@ -6,20 +6,27 @@
 
 在运行时为微信输入法叠加自定义能力：键盘背景材质、按键反馈与高光、品牌配色与字体、键盘 Logo、剪贴板增强与系统防护。模块只在运行时修改，不替换、不改动输入法安装包。
 
-<p align="center">        
-  <img src="https://img.shields.io/badge/Android-12%2B-3DDC84?style=flat-square\\\\\\\\\\\\\\\&amp;logo=android\\\\\\\\\\\\\\\&amp;logoColor=white" alt="Android 12+">        
-  <img src="https://img.shields.io/badge/LSPosed-API%20102-5C6BC0?style=flat-square" alt="LSPosed API 102">        
-  <img src="https://img.shields.io/badge/Stack-Jetpack%20Compose-4285F4?style=flat-square" alt="Jetpack Compose">        
+<p align="center">          
+  <img src="https://img.shields.io/badge/Android-12%2B-3DDC84?style=flat-square\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\&amp;logo=android\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\&amp;logoColor=white" alt="Android 12+">          
+  <img src="https://img.shields.io/badge/LSPosed-API%20102-5C6BC0?style=flat-square" alt="LSPosed API 102">          
+  <img src="https://img.shields.io/badge/Stack-Jetpack%20Compose-4285F4?style=flat-square" alt="Jetpack Compose">          
 </p>
 
-<p align="center">        
-  <a href="#功能特性">功能特性</a> ·        
-  <a href="#安装与使用">安装与使用</a> ·        
-  <a href="#兼容性">兼容性</a> ·        
-  <a href="#常见问题">常见问题</a> ·        
-  <a href="#上游与致谢">上游与致谢</a>        
-</p>        
+<p align="center">          
+  <a href="https://github.com/Unique-hcc/WeType_Unique">前往 GitHub</a> ·          
+  <a href="#功能特性">功能特性</a> ·          
+  <a href="#安装与使用">安装与使用</a> ·          
+  <a href="#兼容性">兼容性</a> ·          
+  <a href="#常见问题">常见问题</a> ·          
+  <a href="#上游与致谢">上游与致谢</a>          
+</p>          
 </div>
+
+<p align="center">
+  <a href="https://github.com/Unique-hcc/WeType_Unique/releases">
+    <img src="https://img.shields.io/badge/下载-模块%20%26%20内置输入法-FF4D4F?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="下载">
+  </a>
+</p>
 
 ---
 
@@ -31,7 +38,8 @@
 | :------- | :-------------------------------------------------------- |
 | 界面美化     | 背景颜色 / 不透明度 / 圆角 / 模糊 / 边缘高光、Monet 动态配色、HyperOS 材质、系统液态玻璃 |
 | 按键效果     | 按键反馈（弹簧 / 柔性形变）、按键高光（默认 / 玻璃彩光）                           |
-| 按键震动     | 按下 / 抬起震动、系统预设与自定义手感、时长与强度调节                                   |
+| 按键震动     | 按下 / 抬起震动、系统预设与自定义手感、时长与强度调节                              |
+| 按键下滑手势   | 按键向下滑动触发动作（复制 / 粘贴 / 全选等）、26 键 / 九宫格 / 任意键绑定、动作短标签与触发提示      |
 | 品牌色与字体   | 品牌色直染、功能键配色、候选跟随品牌色、壁纸取色色卡、系统 / 内置 / 自定义字体、功能键文本替换        |
 | 外观与 Logo | 键盘 Logo（SVG / 图片，隐藏底圈）、隐藏键盘提示、豆包按键音、底栏适配                  |
 | 底栏与快捷栏   | 液态玻璃底栏细调、自定义底栏按钮与排序                                       |
@@ -44,7 +52,7 @@
 - 窗口背景颜色、不透明度、模糊强度、圆角半径自由调节
 - 边缘高光（edge highlight）开关与强度
 - 跟随壁纸的 **Monet 动态配色**（Material You）：从当前壁纸主色用 HCT 算法派生整套界面 / 功能键色板
-- **HyperOS 4 高级键盘材质** 与 **系统液态玻璃（Liquid Glass）** 支持(本人无小米手机，该HyperOS 4的高级素材均来源于上游。)
+- **HyperOS 4 高级键盘材质** 与 **系统液态玻璃（Liquid Glass）** 支持
 - 工具栏图标背景不透明度
 
 ### 按键效果
@@ -58,8 +66,30 @@
 
 - 接入键盘根视图触摸事件，在按下 / 抬起时触发震动（hook：`wetype.key-vibration`）
 - **按下震动 / 抬起震动** 分别可设，模式支持：**无震动 / 系统预设 / 简单自定义**
-- 系统预设提供多档**预设手感**（PRESET_NAMES），自定义模式可调**震动时长**（10~200ms）与**震动强度**（1~255）
+- 系统预设提供多档**预设手感**（PRESET_NAMES），自定义模式可调**震动时长**（10~~200ms）与**震动强度**（1~~255）
 - 建议关闭输入法自带的按键震动，避免双重反馈；部分系统上「简单自定义」效果偏弱，推荐使用系统预设
+
+### 按键下滑手势
+
+在键盘按键上**向下滑动**触发对应动作（总开关默认关闭，开启后可用），把常用操作从「点按菜单」搬到「一滑即达」：
+
+- **默认绑定**：`z / x / c / v` 对应 全选 / 剪切 / 复制 / 粘贴
+- **可绑定的动作**涵盖多类：
+  - 基础编辑：全选 / 剪切 / 复制 / 粘贴
+  - 复合动作：复制全部 / 剪切全部
+  - 段落导航：段首 / 段尾 / 选至段首 / 选至段尾
+  - 全文导航：文首 / 文尾 / 选至文首 / 选至文尾
+  - 面板唤起：剪贴板 / 快捷发送（快捷短语）
+  - 编辑历史：撤销 / 重做
+  - 输入法切换：下一个 / 上一个 / 选择输入法
+  - 文本：输入指定内容
+  - 启动应用：下滑启动指定 App（带包名参数）
+  - AI 能力（复用宿主）：问 AI / 灵动表达（文本润色）/ 排版成图
+  - 悬浮键盘：开 / 收
+  - 并支持单键禁用下滑
+- **绑定范围**：26 键、九宫格数字键（2–9）、以及任意布局键（14 键 / 18 键等）均可单独指定不同动作
+- **触发与反馈**：可调触发阈值（26 键默认 12dp、九宫格默认 20dp）、触发震动、按键上显示动作短标签、标签文字缩放（70%–180%）、触发提示、隐藏键盘预览提示、禁用特定键
+- 密码框内也放行剪贴板 / 快捷短语 / 输入法切换等动作
 
 ### 品牌色与字体
 
@@ -105,6 +135,7 @@
 - Android 12 及以上
 - LSPosed 或兼容的 Xposed 框架，Xposed API 版本不低于 102
 - 已安装并启用 **微信输入法（com.tencent.wetype）**
+  - 本仓库 Releases 同时提供**内置好的微信输入法安装包**，未安装或需替换的用户可直接从 [Releases](https://github.com/Unique-hcc/WeType_Unique/releases) 下载
 
 ### 安装步骤
 
