@@ -1,0 +1,5 @@
+# 统一换行，避免 Windows 提交后 CI 里 python/bash 异常
+* text=auto eol=lf
+*.png binary
+*.apk binary
+*.jar binary

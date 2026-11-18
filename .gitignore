@@ -1,0 +1,23 @@
+# ===== 签名与密钥：永不入库（一旦泄露，别人就能签出和你一样的包）=====
+*.bks
+*.jks
+*.keystore
+*.p12
+*.b64
+*.pem
+*.key
+ks.txt
+
+# ===== 产物与大文件（GitHub 单文件 100MB 硬限制）=====
+*.apk
+*.apks
+*.xapk
+release/
+dist/
+.cache/
+.build/
+
+# ===== 流水线中间件 =====
+lspatch.jar
+bcprov.jar
+builder/tools/build/
