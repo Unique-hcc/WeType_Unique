@@ -148,3 +148,14 @@ GitHub 会在日志里自动掩码 Secret 内容，但反过来讲：Secret 一�
 2. 按第五节配 3 个 Secret。
 3. Actions 里手动 Run 一次，确认 `Verify content` 与 `Verify signature` 都通过。
 4. 下载 artifact 装机，先卸官方版再装。
+
+## 十、报错对照
+
+| 报错 | 原因 | 处理 |
+| --- | --- | --- |
+| `java.io.EOFException`（`Convert keystore` 步） | 三个 Secret 全空 → `official.bks` 是 0 字节 | 按第五节添加 Secret；现在流水线会先检查并直接报「缺少 Secret」 |
+| `文件头不是 BKS v2 的 00 00 00 02` | 贴进去的不是 BKS 的裸 base64（常见：`certutil` 带 BEGIN/END 头、贴成了 p12 或 jks） | 用 `base64 -w0 Unique.bks` 的输出整段粘贴 |
+| `解出来只有 N 字节` | base64 被截断 / 只贴了一部分 | 重新复制完整内容，GitHub 输入框支持长文本 |
+| `KeyStore integrity check failed` | `KEYSTORE_PASS` 不对 | 换成 BKS 真实口令（不是 p12 的） |
+| `Cannot recover key` / `alias 不存在` | `KEY_ALIAS` 不对 | `keytool -list -keystore Unique.bks -storetype BKS -providerclass org.bouncycastle.jce.provider.BouncyCastleProvider -providerpath bcprov.jar` 看真实别名 |
+| Secret 明明加了却还是空 | 加在了 Variables 页签 / Environment secret / 名字大小写不一致 | 必须在 **Secrets** 页签，仓库级，`KEYSTORE_B64` 等大小写完全一致 |

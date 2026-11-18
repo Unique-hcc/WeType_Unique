@@ -115,6 +115,7 @@ jobs:
           ls -lh module.apk
 
       # ---------- 6. BKS 转 PKCS12（LSPatch 只认 JVM 默认的 PKCS12） ----------
+      # 三个 Secret 缺失时这里会明确报错，而不是丢一个 EOFException 让人猜
       - name: Convert keystore
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
@@ -122,13 +123,51 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           set -euo pipefail
-          echo "$KEYSTORE_B64" | base64 -d > official.bks
+
+          missing=()
+          [ -n "${KEYSTORE_B64:-}" ]  || missing+=("KEYSTORE_B64")
+          [ -n "${KEYSTORE_PASS:-}" ] || missing+=("KEYSTORE_PASS")
+          [ -n "${KEY_ALIAS:-}" ]     || missing+=("KEY_ALIAS")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::缺少 Secret：${missing[*]}（当前为空）"
+            cat <<'MSG'
+          ┌─ 怎么修 ─────────────────────────────────────────────┐
+          │ 仓库页 → Settings → Secrets and variables → Actions  │
+          │ → New repository secret，逐个添加：                  │
+          │   KEYSTORE_B64   = base64 -w0 Unique.bks 的整段输出  │
+          │   KEYSTORE_PASS  = BKS 的口令                        │
+          │   KEY_ALIAS      = unique                            │
+          │ 注意：加在 Secrets 页签，不是 Variables 页签；       │
+          │       也不是 Environment secret；名字大小写要完全一致 │
+          └──────────────────────────────────────────────────────┘
+          MSG
+            exit 1
+          fi
+
+          # 去掉粘贴时带的换行/空格/CR，否则 base64 会解出残包
+          printf '%s' "$KEYSTORE_B64" | tr -d '\r\n \t' | base64 -d > official.bks
+
+          SIZE=$(stat -c %s official.bks)
+          echo "official.bks = ${SIZE} bytes"
+          if [ "$SIZE" -lt 100 ]; then
+            echo "::error::解出来只有 ${SIZE} 字节，base64 内容不完整或被截断"
+            echo "::error::请用 Git Bash 执行 base64 -w0 Unique.bks 后整段粘贴；不要用 certutil（它会加 BEGIN/END 头）"
+            exit 1
+          fi
+          HEAD=$(head -c 4 official.bks | od -An -tx1 | tr -d ' \n')
+          echo "文件头 = $HEAD"
+          if [ "$HEAD" != "00000002" ]; then
+            echo "::error::文件头不是 BKS v2 的 00 00 00 02，这个不是有效的 BKS 密钥库"
+            exit 1
+          fi
+
           curl -sL --fail -o bcprov.jar \
             https://repo1.maven.org/maven2/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar
           mkdir -p builder/tools/build
           javac -cp bcprov.jar -d builder/tools/build builder/tools/BksToP12.java
           java -cp "bcprov.jar:builder/tools/build" BksToP12 \
             official.bks "$KEYSTORE_PASS" "$KEY_ALIAS" sign.p12 "$KEYSTORE_PASS"
+          rm -f official.bks
 
       # ---------- 7. 内置模块 + 补权限 + 重签名 ----------
       # -m   内置(集成)模式，模块烤进 APK，不依赖管理器
