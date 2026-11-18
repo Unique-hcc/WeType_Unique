@@ -121,8 +121,31 @@ jobs:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
           KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          # 只用来诊断「是不是误加到了 Variables 页签」，绝不打印值
+          VAR_KEYSTORE_B64: ${{ vars.KEYSTORE_B64 }}
+          VAR_KEYSTORE_PASS: ${{ vars.KEYSTORE_PASS }}
+          VAR_KEY_ALIAS: ${{ vars.KEY_ALIAS }}
         run: |
           set -euo pipefail
+
+          echo "本次运行代码版本：${GITHUB_SHA}"
+          echo "| Secret | 状态 |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${KEYSTORE_B64:-}" ]; then
+            echo "| KEYSTORE_B64 | 已配置（${#KEYSTORE_B64} 字符） |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| KEYSTORE_B64 | **缺失** |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -n "${KEYSTORE_PASS:-}" ]; then
+            echo "| KEYSTORE_PASS | 已配置 |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| KEYSTORE_PASS | **缺失** |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -n "${KEY_ALIAS:-}" ]; then
+            echo "| KEY_ALIAS | 已配置（$KEY_ALIAS） |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| KEY_ALIAS | **缺失** |" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
           missing=()
           [ -n "${KEYSTORE_B64:-}" ]  || missing+=("KEYSTORE_B64")
@@ -130,15 +153,18 @@ jobs:
           [ -n "${KEY_ALIAS:-}" ]     || missing+=("KEY_ALIAS")
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::缺少 Secret：${missing[*]}（当前为空）"
+            if [ -n "${VAR_KEYSTORE_B64:-}${VAR_KEYSTORE_PASS:-}${VAR_KEY_ALIAS:-}" ]; then
+              echo "::error::检测到 Variables 里有同名变量，但流水线读的是 Secrets —— 请把 Variables 里的同名项删掉，改加到 Secrets 页签"
+            fi
             cat <<'MSG'
           ┌─ 怎么修 ─────────────────────────────────────────────┐
           │ 仓库页 → Settings → Secrets and variables → Actions  │
-          │ → New repository secret，逐个添加：                  │
+          │ → 选 Secrets 页签 → New repository secret            │
           │   KEYSTORE_B64   = base64 -w0 Unique.bks 的整段输出  │
           │   KEYSTORE_PASS  = BKS 的口令                        │
           │   KEY_ALIAS      = unique                            │
-          │ 注意：加在 Secrets 页签，不是 Variables 页签；       │
-          │       也不是 Environment secret；名字大小写要完全一致 │
+          │ 注意：不是 Variables 页签；不是 Environment secret；  │
+          │       名字大小写要完全一致                            │
           └──────────────────────────────────────────────────────┘
           MSG
             exit 1
