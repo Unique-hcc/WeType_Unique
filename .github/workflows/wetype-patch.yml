@@ -447,7 +447,8 @@ jobs:
               "签名：自定义证书，与官方不同 —— 安装前请先卸载官方版" \
               "内置权限：QUERY_ALL_PACKAGES" \
               "" \
-              "附件名用 ASCII（GitHub 会吃掉中文）：$ASSET 即 微信输入法_${{ steps.apkinfo.outputs.app_version }}_V${{ steps.module.outputs.version }}.apk")"
+              "附件名用 ASCII（GitHub 会吃掉中文）：$ASSET 即 微信输入法_${{ steps.apkinfo.outputs.app_version }}_V${{ steps.module.outputs.version }}.apk"
+            )
             gh release create "$TAG" "release/$ASSET" \
               --title "微信输入法 ${{ steps.apkinfo.outputs.app_version }} + 模块 ${{ steps.module.outputs.version }}" \
               --notes "$NOTES"
