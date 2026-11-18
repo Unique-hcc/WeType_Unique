@@ -123,9 +123,13 @@ GitHub 会在日志里自动掩码 Secret 内容，但反过来讲：Secret 一�
 
 ## 六、触发
 
-- Actions → `Build patched WeType` → Run workflow：可填 `module_asset`（指定 Release 资产名）、`version_code_bump`（同版本覆盖安装时 +N）、`force`（跳过缓存）
+- Actions → `Build patched WeType` → Run workflow：
+  - `module_asset`：指定 Release 资产名（留空自动取体积最小的 .apk）
+  - `version_code_bump`：versionCode 加值（同版本覆盖安装时用）
+  - `force`：跳过缓存重下官方包
+  - `publish_release`：**默认关**。勾了才会在构建成功后建 Release 并上传产物；不勾只有 Actions artifact
 - 任意 issue 评论 `/build`（手机最顺手，仅仓库所有者生效）
-- 每周一 03:00 定时
+- 每周一 03:00 定时（定时与 `/build` 都只出 artifact，不发 Release）
 
 ## 七、模块包的挑选规则
 
@@ -138,9 +142,10 @@ GitHub 会在日志里自动掩码 Secret 内容，但反过来讲：Secret 一�
 3. **输入法身份**：IME 需被系统列入输入法列表，部分国内 ROM 校验签名/来源。
 4. **腾讯系可能有完整性校验**：闪退把 `-l` 从 2 提到 3，或加 `--debuggable` 看日志。
 5. **别把 230MB 官方包入库**（GitHub 单文件 100MB 限制 + 二次分发问题），流水线用 Actions cache 缓存。
-6. **本仓库是 public**：产物只留在 Actions artifact（需登录且有权限才能下，`retention-days: 2`），**不要**挂到 Releases，那等于公开二次分发腾讯官方包。
+6. **产物默认不发 Release**：只留在 Actions artifact（需登录且有权限才能下，`retention-days: 2`）。本仓库是 public，一旦发 Release 就是公开分发腾讯官方包的二次打包版本，自行判断风险；确实要发就在 Run workflow 里勾 `publish_release`。
 7. **`QUERY_ALL_PACKAGES` 是敏感权限**：只自己装，别分发；Android 11+ 才生效。
 8. **模块要跟版本走**：输入法升级后资源 id / 类名会漂。
+9. **本机删掉 `Unique.bks` 不影响 CI**：云上用的是仓库 Secret 里那份 base64，和你电脑无关。但 Secret 是只写不可读的，本地文件删了 + 密码忘了 = 再也签不出能覆盖安装的包，务必离线备份两份（U 盘 + 私有网盘），密码单独记。
 
 ## 九、落地顺序
 

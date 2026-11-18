@@ -1,7 +1,7 @@
 name: Build patched WeType
 
 # 触发：
-#   1) Actions -> Run workflow（可指定模块资产名 / versionCode 加值）
+#   1) Actions -> Run workflow（可指定模块资产名 / versionCode 加值 / 是否发 Release）
 #   2) 任意 issue 评论 /build（手机上最顺手）
 #   3) 每周一 03:00 自动检测
 on:
@@ -17,6 +17,10 @@ on:
         default: "0"
       force:
         description: "忽略缓存，强制重下官方包"
+        type: boolean
+        default: false
+      publish_release:
+        description: "构建成功后创建 Release 并上传产物（公开仓库会公开分发，谨慎勾选）"
         type: boolean
         default: false
   issue_comment:
@@ -43,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
-      contents: read
+      contents: write   # 勾了 publish_release 时要建 Release / 传附件
 
     steps:
       - uses: actions/checkout@v4
@@ -285,3 +289,27 @@ jobs:
           path: release/*.apk
           retention-days: 2
           compression-level: 0
+
+      # ---------- 10. 可选：发到 Releases（默认关，公开仓库勾了就是公开分发） ----------
+      - name: Publish to Releases
+        if: ${{ inputs.publish_release }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          F="release/${{ steps.rename.outputs.file }}"
+          TAG="WeType_${{ steps.apkinfo.outputs.app_version }}_V${{ steps.module.outputs.version }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG 已存在，覆盖上传"
+            gh release upload "$TAG" "$F" --clobber
+          else
+            NOTES=$(printf '%s\n' \
+              "内置模块：WeType_Unique ${{ steps.module.outputs.version }}" \
+              "官方底包：微信输入法 ${{ steps.resolve.outputs.version }}（versionCode ${{ steps.apkinfo.outputs.versioncode }}）" \
+              "签名：自定义证书，与官方不同 —— 安装前请先卸载官方版" \
+              "内置权限：QUERY_ALL_PACKAGES")
+            gh release create "$TAG" "$F" \
+              --title "微信输入法 ${{ steps.apkinfo.outputs.app_version }} + 模块 ${{ steps.module.outputs.version }}" \
+              --notes "$NOTES"
+          fi
+          echo "已发布：${{ github.server_url }}/${{ github.repository }}/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
