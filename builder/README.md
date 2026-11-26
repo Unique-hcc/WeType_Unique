@@ -125,12 +125,19 @@ GitHub 会在日志里自动掩码 Secret 内容，但反过来讲：Secret 一�
 
 ## 六、触发
 
-只有两种，且**都由你自己发起**（没有定时任务、没有别人能碰的入口），产物命名和版本解析完全一致。
+只有三种，且**都由你自己发起**（没有定时任务、没有别人能碰的入口），产物命名和版本解析完全一致。
 
 | 触发方式 | 何时 | 会自动发 Release 吗 |
 | --- | --- | --- |
 | **发布 Release**（上传新模块） | 你在本仓库点 Publish release 的那一刻 | ✅ 自动发，无需勾选 |
+| issue 评论 `/build` | **手机最顺手**，仅仓库所有者生效 | ✅ 自动发；写 `/build dry` 则只出 artifact |
 | 手动 Run workflow | 你自己点，可勾 `publish_release` | 看勾选（默认勾上） |
+
+**手机触发（issue 评论）**：随便找个 issue（本仓库可以先建一个常驻的「构建」issue）评论 `/build` 就行，跑完流水线会**回帖**告诉你成功还是失败，成功时直接给 Release 下载链接 —— 手机上点开就能装，不用去 Actions 页面翻。
+
+- `/build` → 打包 + 发 Release
+- `/build dry`（也可写 `no-publish` / `artifact`）→ 只出 artifact，不发 Release
+- 别人评论同样内容 → job 直接 skipped，跑不起来
 
 **手动 Run workflow 的参数**：
 
@@ -152,6 +159,7 @@ GitHub 会在日志里自动掩码 Secret 内容，但反过来讲：Secret 一�
 ## 八、权限：只有仓库所有者能触发
 
 - **手动 Run workflow**：需要仓库 write 权限。public 仓库的陌生访客看不到这个按钮，fork 也不会带过去。
+- **issue 评论 `/build`**：job 上有 `github.event.comment.user.login == github.repository_owner` 的硬校验，别人评论同样内容只会得到 skipped（连 job 都不启动）。
 - **Release 触发**：能发 Release 的人本身就必须有 write 权限。
 - 产物（artifact / Release）下载同样要登录且有读权限。
 
